@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Adda247 — WhatsApp Lead Intelligence Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html{font-size:14px;scroll-behavior:smooth}
+body{background:#F5F6FA;color:#1A1D2E;font-family:'Inter',sans-serif;min-height:100vh}
+
+/* LOADING */
+#loader{position:fixed;inset:0;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:20px;transition:opacity .5s ease}
+#loader.hide{opacity:0;pointer-events:none}
+.ld-logo img{height:44px;width:auto}
+.ld-bar-wrap{width:300px}
+.ld-bar-track{width:100%;height:4px;background:#F0F1F7;border-radius:2px;overflow:hidden}
+.ld-bar-fill{height:100%;background:linear-gradient(90deg,#C8101A,#FF6B6B);border-radius:2px;width:0%;transition:width .3s ease}
+.ld-text{font-size:12px;color:#9EA3B5;font-weight:500;text-align:center}
+.ld-sub{font-size:11px;color:#C5C8D6;margin-top:4px}
+
+/* TOPBAR */
+.topbar{background:linear-gradient(90deg,#B01018,#C8101A,#B01018);padding:7px 0;text-align:center;font-size:11px;font-weight:700;color:rgba(255,255,255,.92);letter-spacing:1.6px;text-transform:uppercase}
+
+/* HEADER */
+.header{background:#fff;border-bottom:1px solid #E8E9F0;padding:0 32px;height:68px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:300;box-shadow:0 2px 12px rgba(0,0,0,.06)}
+.logo-block{display:flex;align-items:center;gap:14px}
+.logo-img-wrap{padding:6px 10px;background:#fff;border:1.5px solid #E8E9F0;border-radius:8px;display:flex;align-items:center;height:46px}
+.logo-img-wrap img{height:28px;width:auto;object-fit:contain}
+.divider-v{width:1px;height:32px;background:#E8E9F0}
+.prod-name{font-size:14px;font-weight:700;color:#1A1D2E}
+.prod-sub{font-size:10px;color:#9EA3B5;letter-spacing:1.5px;text-transform:uppercase;margin-top:1px}
+.header-right{display:flex;align-items:center;gap:16px}
+.live-tag{display:flex;align-items:center;gap:6px;background:#F0FFF6;border:1px solid #A8EDD1;border-radius:20px;padding:5px 13px;font-size:10px;font-weight:700;color:#18A86B;letter-spacing:.8px;text-transform:uppercase}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#18A86B;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.hdate{font-family:'JetBrains Mono',monospace;font-size:11px;color:#9EA3B5}
+
+/* NAV */
+.nav{background:#fff;border-bottom:2px solid #F0F1F7;padding:0 32px;display:flex}
+.ntab{position:relative;padding:15px 22px;font-size:12px;font-weight:600;color:#9EA3B5;cursor:pointer;transition:color .2s;letter-spacing:.4px;text-transform:uppercase;display:flex;align-items:center;gap:8px;border-bottom:2px solid transparent;margin-bottom:-2px}
+.ntab:hover{color:#1A1D2E}
+.ntab.active{color:#C8101A;border-bottom-color:#C8101A}
+.nbadge{background:#FFF0F0;color:#C8101A;border:1px solid #FFD0D0;border-radius:10px;padding:2px 8px;font-size:10px;font-weight:700}
+
+/* PAGE */
+.page{display:none;padding:28px 32px 56px;animation:fadeUp .3s ease}
+.page.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* SEC HEADER */
+.sec-tag{font-size:10px;font-weight:700;color:#C8101A;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px}
+.sec-title{font-size:22px;font-weight:800;color:#1A1D2E;letter-spacing:-.3px;margin-bottom:3px}
+.sec-sub{font-size:12px;color:#9EA3B5;margin-bottom:22px}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:24px}
+.kcard{background:#fff;border:1.5px solid #E8E9F0;border-radius:12px;padding:20px 18px;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s}
+.kcard:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.08)}
+.kcard::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px}
+.kc-total::before{background:#C8101A}.kc-hot::before{background:#FF3B3B}.kc-warm::before{background:#FF8C00}.kc-follow::before{background:#8B5CF6}.kc-no::before{background:#CBD5E1}.kc-score::before{background:#18A86B}
+.klabel{font-size:10px;font-weight:700;color:#9EA3B5;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:10px}
+.knum{font-size:28px;font-weight:800;color:#1A1D2E;letter-spacing:-.5px;line-height:1;margin-bottom:4px}
+.kc-hot .knum{color:#FF3B3B}.kc-warm .knum{color:#FF8C00}.kc-score .knum{color:#18A86B}
+.ksub{font-size:10px;color:#9EA3B5}
+
+/* BANNER */
+.banner{background:linear-gradient(135deg,#FFF5F5,#FFF0F0);border:1.5px solid #FFD5D5;border-left:4px solid #C8101A;border-radius:12px;padding:18px 22px;margin-bottom:24px;display:flex;gap:18px;align-items:flex-start}
+.bico{width:38px;height:38px;border-radius:9px;background:#C8101A;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;box-shadow:0 4px 12px rgba(200,16,26,.3)}
+.btitle{font-size:13px;font-weight:700;color:#1A1D2E;margin-bottom:9px}
+.bpills{display:flex;flex-wrap:wrap;gap:7px}
+.bpill{font-size:11px;padding:4px 11px;border-radius:20px;font-weight:500}
+.bp-fire{background:#FFF0F0;border:1px solid #FFB8B8;color:#C8101A}
+.bp-go{background:#F0FFF6;border:1px solid #A8EDD1;color:#18A86B}
+.bp-warm{background:#FFF8F0;border:1px solid #FFD9A0;color:#CC7000}
+.bp-info{background:#F5F6FA;border:1px solid #E8E9F0;color:#5B6079}
+
+/* CHARTS */
+.chart-row-2{display:grid;grid-template-columns:2fr 1.1fr;gap:16px;margin-bottom:20px}
+.chart-row-3{display:grid;grid-template-columns:1.2fr 1fr .85fr;gap:16px;margin-bottom:26px}
+.ccard{background:#fff;border:1.5px solid #E8E9F0;border-radius:12px;padding:22px}
+.ctitle{font-size:13px;font-weight:700;color:#1A1D2E;margin-bottom:3px}
+.csub{font-size:11px;color:#9EA3B5;margin-bottom:18px}
+.cwrap{position:relative;height:210px}
+.cbars{display:flex;flex-direction:column;gap:10px;margin-top:4px}
+.cb{display:grid;grid-template-columns:110px 1fr 40px;align-items:center;gap:10px}
+.cblabel{font-size:11px;color:#5B6079;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cbtrack{background:#F0F1F7;border-radius:4px;height:6px;overflow:hidden}
+.cbfill{height:100%;border-radius:4px;background:linear-gradient(90deg,#C8101A,#FF6B6B);transition:width 1.2s ease}
+.cbval{font-family:'JetBrains Mono',monospace;font-size:11px;color:#9EA3B5;text-align:right}
+.hmgrid{display:grid;grid-template-columns:repeat(24,1fr);gap:3px;margin-top:10px}
+.hmcell{aspect-ratio:1;border-radius:3px;background:#F0F1F7}
+.hmlabs{display:grid;grid-template-columns:repeat(24,1fr);gap:3px;margin-top:4px}
+.hmlab{text-align:center;font-size:8px;color:#C5C8D6;font-family:'JetBrains Mono',monospace}
+.hmlegend{display:flex;gap:14px;margin-top:12px}
+.hml{display:flex;align-items:center;gap:5px;font-size:10px;color:#9EA3B5}
+.hmldot{width:12px;height:7px;border-radius:2px}
+
+/* TABLE */
+.tbl-wrap{background:#fff;border:1.5px solid #E8E9F0;border-radius:12px;overflow:hidden}
+.tbl-hd{padding:14px 20px;border-bottom:1px solid #F0F1F7;display:flex;align-items:center;justify-content:space-between}
+.tbl-title{font-size:13px;font-weight:700;color:#1A1D2E}
+table{width:100%;border-collapse:collapse}
+thead tr{background:#F8F9FC}
+th{padding:10px 13px;text-align:left;font-size:10px;font-weight:700;color:#9EA3B5;text-transform:uppercase;letter-spacing:1.2px;border-bottom:1.5px solid #F0F1F7;white-space:nowrap}
+th:first-child{padding-left:20px}
+td{padding:11px 13px;border-bottom:1px solid #F8F9FC;font-size:12px;color:#5B6079;vertical-align:top}
+td:first-child{padding-left:20px}
+tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:#FFFAFA}
+.td-phone{font-family:'JetBrains Mono',monospace;font-size:11px;color:#1A1D2E;font-weight:600;white-space:nowrap}
+.td-date{font-family:'JetBrains Mono',monospace;font-size:10px;color:#9EA3B5;white-space:nowrap}
+.td-msg{max-width:250px;line-height:1.5;font-size:11px;color:#1A1D2E}
+.td-all{max-width:220px;font-size:10px;color:#9EA3B5;line-height:1.5}
+.td-count{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:800;color:#1A1D2E;text-align:center}
+.catbadge{display:inline-block;padding:2px 9px;border-radius:5px;font-size:10px;font-weight:600;background:#F5F6FA;color:#5B6079;letter-spacing:.4px;white-space:nowrap}
+.rp{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:600;margin:1px 1px 1px 0}
+.rp-P{background:#FFF0F0;color:#C8101A}
+.rp-Y{background:#FFF5E6;color:#CC7000}
+.rp-B{background:#F0F0FF;color:#6B5CE7}
+.rp-D{background:#F0FFF8;color:#18A86B}
+.rp-C{background:#F0F4FF;color:#2563EB}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.4px;white-space:nowrap}
+.b-hot{background:#FFF0F0;color:#C8101A;border:1px solid #FFB8B8}
+.b-warm{background:#FFF8F0;color:#CC7000;border:1px solid #FFD9A0}
+.b-follow{background:#F5F0FF;color:#8B5CF6;border:1px solid #D4B8FF}
+.b-no{background:#F5F6FA;color:#9EA3B5;border:1px solid #E8E9F0}
+.prio-label{display:inline-flex;flex-direction:column;align-items:center;padding:5px 9px;border-radius:8px;font-size:10px;font-weight:800;line-height:1.2;white-space:nowrap}
+.pl-hot{background:#FFF0F0;color:#C8101A;border:1.5px solid #FFB8B8}
+.pl-warm{background:#FFF8F0;color:#CC7000;border:1.5px solid #FFD9A0}
+.pl-follow{background:#F5F0FF;color:#8B5CF6;border:1.5px solid #D4B8FF}
+
+/* FILTER */
+.filter-panel{background:#fff;border:1.5px solid #E8E9F0;border-radius:12px;padding:22px 24px;margin-bottom:18px}
+.filter-row{display:grid;gap:14px;margin-bottom:14px}
+.filter-row:last-child{margin-bottom:0}
+.row1{grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr}
+.row2{grid-template-columns:1.6fr 1fr 1fr auto}
+.fg{display:flex;flex-direction:column;gap:5px}
+.fl{font-size:10px;font-weight:700;color:#9EA3B5;text-transform:uppercase;letter-spacing:1.2px}
+.fi,.fs{background:#F8F9FC;border:1.5px solid #E8E9F0;border-radius:8px;padding:9px 12px;color:#1A1D2E;font-size:12px;font-family:'Inter',sans-serif;outline:none;transition:border-color .2s}
+.fi::placeholder{color:#C5C8D6}
+.fi:focus,.fs:focus{border-color:#C8101A;background:#fff}
+.fs option{background:#fff}
+.factions{display:flex;gap:10px;align-items:flex-end}
+.btn-apply{background:#C8101A;border:none;border-radius:8px;padding:10px 22px;color:#fff;font-weight:700;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;box-shadow:0 4px 14px rgba(200,16,26,.25);transition:background .2s;white-space:nowrap}
+.btn-apply:hover{background:#A80D16}
+.btn-reset{background:#fff;border:1.5px solid #E8E9F0;border-radius:8px;padding:10px 16px;color:#5B6079;font-weight:600;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s;white-space:nowrap}
+.btn-reset:hover{border-color:#C8101A;color:#C8101A}
+.btn-dl{background:#1A1D2E;border:none;border-radius:8px;padding:10px 18px;color:#fff;font-weight:700;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:7px;transition:background .2s;white-space:nowrap}
+.btn-dl:hover{background:#2D3250}
+.mini-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+.mstat{background:#fff;border:1.5px solid #E8E9F0;border-radius:12px;padding:18px 20px;border-left:4px solid #E8E9F0;transition:box-shadow .2s}
+.mstat:hover{box-shadow:0 4px 16px rgba(0,0,0,.07)}
+.ms-total{border-left-color:#C8101A}.ms-hot{border-left-color:#FF3B3B}.ms-warm{border-left-color:#FF8C00}.ms-follow{border-left-color:#8B5CF6}
+.mslabel{font-size:10px;font-weight:700;color:#9EA3B5;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:6px}
+.msnum{font-size:24px;font-weight:800;color:#1A1D2E;letter-spacing:-.5px;line-height:1;margin-bottom:3px}
+.ms-hot .msnum{color:#FF3B3B}.ms-warm .msnum{color:#FF8C00}
+.mssub{font-size:10px;color:#9EA3B5}
+.tbl-nav{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid #F0F1F7}
+.showing-txt{font-size:12px;color:#5B6079}
+.showing-txt strong{color:#1A1D2E;font-weight:700}
+.page-controls{display:flex;align-items:center;gap:8px}
+.pgbtn{background:#fff;border:1.5px solid #E8E9F0;border-radius:7px;padding:7px 16px;color:#5B6079;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:600;transition:all .2s}
+.pgbtn:hover{border-color:#C8101A;color:#C8101A}
+.pginfo{font-family:'JetBrains Mono',monospace;font-size:11px;color:#9EA3B5;white-space:nowrap}
+.tbl-scroll{overflow-x:auto;max-height:560px;overflow-y:auto}
+.tbl-scroll::-webkit-scrollbar{width:5px;height:5px}
+.tbl-scroll::-webkit-scrollbar-track{background:#F5F6FA}
+.tbl-scroll::-webkit-scrollbar-thumb{background:#E8E9F0;border-radius:3px}
+.tbl-scroll::-webkit-scrollbar-thumb:hover{background:#C8101A}
+.prio-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.ac-chip{font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;white-space:nowrap}
+.ac-call{background:#FFF0F0;color:#C8101A;border:1px solid #FFB8B8}
+.ac-qualify{background:#FFF8F0;color:#CC7000;border:1px solid #FFD9A0}
+.ac-cb{background:#F5F0FF;color:#8B5CF6;border:1px solid #D4B8FF}
+
+@media(max-width:1300px){.kpi-grid{grid-template-columns:repeat(3,1fr)}.chart-row-2{grid-template-columns:1fr}.chart-row-3{grid-template-columns:1fr 1fr}.row1{grid-template-columns:1fr 1fr 1fr}}
+@media(max-width:768px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.page{padding:16px}.header,.nav{padding:0 16px}.row1{grid-template-columns:1fr 1fr}.row2{grid-template-columns:1fr 1fr}.mini-stats,.prio-stats{grid-template-columns:repeat(2,1fr)}}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:#F5F6FA}::-webkit-scrollbar-thumb{background:#E8E9F0;border-radius:3px}
+</style>
+</head>
+<body>
+
+<!-- LOADING SCREEN -->
+<div id="loader">
+  <div class="ld-logo"><img src="data:image/png;base64,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" alt="Adda247"></div>
+  <div class="ld-bar-wrap">
+    <div style="font-size:13px;font-weight:700;color:#1A1D2E;margin-bottom:12px;text-align:center">Loading Lead Intelligence Dashboard</div>
+    <div class="ld-bar-track"><div class="ld-bar-fill" id="ldBar"></div></div>
+  </div>
+  <div class="ld-text" id="ldText">Initializing dashboard...</div>
+  <div class="ld-sub">37,786 leads · 572,272 messages analyzed</div>
+</div>
+
+<div class="topbar">⚡ ADDA247 · WHATSAPP LEAD INTELLIGENCE · 572,272 MESSAGES ANALYZED · JUN 2025 – MAY 2026</div>
+
+<header class="header">
+  <div class="logo-block">
+    <div class="logo-img-wrap">
+      <img src="data:image/png;base64,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" alt="Adda247">
+    </div>
+    <div class="divider-v"></div>
+    <div>
+      <div class="prod-name">Lead Intelligence</div>
+      <div class="prod-sub">WhatsApp CRM · Sales Desk</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="hdate" id="hdate"></div>
+    <div class="live-tag"><div class="live-dot"></div>Live Analysis</div>
+  </div>
+</header>
+
+<nav class="nav">
+  <div class="ntab active" onclick="sw('overview',this)">
+    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke-width="2.5"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke-width="2.5"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke-width="2.5"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke-width="2.5"/></svg>
+    Overview Dashboard
+  </div>
+  <div class="ntab" onclick="sw('leads',this)">
+    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg>
+    Interested Leads Filter
+    <span class="nbadge">37.8K</span>
+  </div>
+  <div class="ntab" onclick="sw('priority',this)">
+    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+    Priority Call List
+    <span class="nbadge">20K Hot</span>
+  </div>
+</nav>
+
+<!-- PAGE 1 -->
+<div class="page active" id="page-overview">
+  <div class="sec-tag">Campaign Intelligence · Jun 2025 – May 2026</div>
+  <div class="sec-title">WhatsApp Lead Analytics Overview</div>
+  <div class="sec-sub">572,272 inbound messages · 1,66,884 unique leads · 12 months of data</div>
+  <div class="kpi-grid">
+    <div class="kcard kc-total"><div class="klabel">Total Unique Leads</div><div class="knum">1,66,884</div><div class="ksub">572K messages received</div></div>
+    <div class="kcard kc-hot"><div class="klabel">🔥 Hot Leads</div><div class="knum">19,992</div><div class="ksub">Buy intent · Call Now</div></div>
+    <div class="kcard kc-warm"><div class="klabel">⚡ Warm Leads</div><div class="knum">13,177</div><div class="ksub">Queries · Nurture</div></div>
+    <div class="kcard kc-follow"><div class="klabel">🔁 Follow-Up</div><div class="knum">4,617</div><div class="ksub">Callbacks within 24h</div></div>
+    <div class="kcard kc-no"><div class="klabel">❌ Not Interested</div><div class="knum">8,009</div><div class="ksub">STOP / Opt-out</div></div>
+    <div class="kcard kc-score"><div class="klabel">📈 Opp. Score</div><div class="knum">19.9%</div><div class="ksub">Hot + Warm qualified</div></div>
+  </div>
+  <div class="banner">
+    <div class="bico">💡</div>
+    <div>
+      <div class="btitle">⚡ Sales Team — Immediate Action Required</div>
+      <div class="bpills">
+        <span class="bpill bp-fire">🔥 19,992 HOT leads — Call within 2 hours</span>
+        <span class="bpill bp-fire">Price & discount queries = #1 buying signal</span>
+        <span class="bpill bp-go">SSC + Banking = highest volume verticals</span>
+        <span class="bpill bp-go">Best calling window: 1 PM – 3 PM IST</span>
+        <span class="bpill bp-warm">Jan 2026 = peak lead month (84,568 messages)</span>
+        <span class="bpill bp-info">37,786 actionable leads · GitHub Pages cached after first load</span>
+      </div>
+    </div>
+  </div>
+  <div class="chart-row-2">
+    <div class="ccard"><div class="ctitle">Monthly Lead Volume & Intent Trend</div><div class="csub">Hot + Warm + Follow-Up leads across 12 months</div><div class="cwrap"><canvas id="monthlyChart"></canvas></div></div>
+    <div class="ccard"><div class="ctitle">Lead Intent Distribution</div><div class="csub">All 1,66,884 unique leads classified</div><div class="cwrap"><canvas id="intentChart"></canvas></div></div>
+  </div>
+  <div class="chart-row-3">
+    <div class="ccard" style="grid-column:span 2"><div class="ctitle">Top Categories — Interested Leads (Hot + Warm)</div><div class="csub">Exam vertical breakdown sorted by conversion opportunity</div><div class="cbars" id="catBars"></div></div>
+    <div class="ccard"><div class="ctitle">Response Activity by Hour (IST)</div><div class="csub">Optimal calling windows</div><div class="hmgrid" id="hmCells"></div><div class="hmlabs" id="hmLabs"></div><div class="hmlegend"><div class="hml"><div class="hmldot" style="background:#C8101A"></div>Peak</div><div class="hml"><div class="hmldot" style="background:rgba(200,16,26,.4)"></div>High</div><div class="hml"><div class="hmldot" style="background:#F0F1F7"></div>Low</div></div></div>
+  </div>
+  <div class="tbl-wrap">
+    <div class="tbl-hd"><div class="tbl-title">🔥 Top 25 Hot Leads — Call Now</div><span class="badge b-hot">🔥 Highest Priority</span></div>
+    <table><thead><tr><th>#</th><th>Phone</th><th>Category</th><th>Score</th><th>Responses</th><th>Latest Message</th><th>Status</th><th>Last Active</th></tr></thead><tbody id="prevBody"></tbody></table>
+  </div>
+</div>
+
+<!-- PAGE 2 -->
+<div class="page" id="page-leads">
+  <div class="sec-tag">Filterable Lead Database</div>
+  <div class="sec-title">Interested Candidates Filter Page</div>
+  <div class="sec-sub">Hot + Warm + Follow-Up · <strong id="totalLeadsCount">37,786</strong> total leads · All data loaded · Searchable, sortable, downloadable</div>
+  <div class="filter-panel">
+    <div class="filter-row row1">
+      <div class="fg"><label class="fl">Priority</label>
+        <select class="fs" id="fIntent"><option value="">All Priorities</option><option value="H">🔥 Hot Leads</option><option value="W">⚡ Warm Leads</option><option value="F">🔁 Follow-Up</option></select></div>
+      <div class="fg"><label class="fl">Campaign / Category</label>
+        <select class="fs" id="fCat"><option value="">All Campaigns</option><option value="SSC">SSC</option><option value="BANKING">Banking</option><option value="RAILWAYS">Railways</option><option value="BIHAR">Bihar</option><option value="CTET">CTET</option><option value="UGC_NET">UGC NET</option><option value="NEET">NEET</option><option value="JAIIB_CAIIB">JAIIB / CAIIB</option><option value="PUNJAB_STATE_EXAMS">Punjab State</option><option value="WEST_BENGAL">West Bengal</option><option value="ENGINEERING">Engineering</option><option value="CUET">CUET</option><option value="ODISHA_STATE_EXAMS">Odisha State</option><option value="AGRICULTURE">Agriculture</option><option value="NURSING">Nursing</option><option value="UPSC">UPSC</option><option value="LAW">Law</option><option value="UNKNOWN">Uncategorised</option></select></div>
+      <div class="fg"><label class="fl">Buying Signal</label>
+        <select class="fs" id="fSignal"><option value="">All Signals</option><option value="P">💰 Price Inquiry</option><option value="B">🛒 Purchase Intent</option><option value="Y">💳 Payment Query</option><option value="D">🏷️ Discount Request</option><option value="C">📚 Batch / Course Query</option></select></div>
+      <div class="fg"><label class="fl">From Date</label><input class="fi" type="date" id="fDateFrom" value="2025-06-23"></div>
+      <div class="fg"><label class="fl">To Date</label><input class="fi" type="date" id="fDateTo" value="2026-05-30"></div>
+      <div class="fg"><label class="fl">Min Score</label><input class="fi" type="number" id="fScore" min="0" max="100" value="0" placeholder="0"></div>
+    </div>
+    <div class="filter-row row2">
+      <div class="fg"><label class="fl">Search Phone / Comment</label><input class="fi" type="text" id="fSearch" placeholder="phone number, course name, keyword..."></div>
+      <div class="fg"><label class="fl">Sort By</label>
+        <select class="fs" id="fSort"><option value="sd">Score High to Low</option><option value="sa">Score Low to High</option><option value="dd">Most Recent First</option><option value="da">Oldest First</option><option value="cd">Most Responses First</option></select></div>
+      <div class="fg"><label class="fl">Rows / Page</label>
+        <select class="fs" id="fRows"><option value="50">50</option><option value="100" selected>100</option><option value="200">200</option><option value="500">500</option></select></div>
+      <div class="factions">
+        <button class="btn-apply" onclick="applyF()">Apply Filters</button>
+        <button class="btn-reset" onclick="resetF()">Reset</button>
+        <button class="btn-dl" onclick="dlCSV()">⬇ Download Filtered CSV</button>
+      </div>
+    </div>
+  </div>
+  <div class="mini-stats">
+    <div class="mstat ms-total"><div class="mslabel">Filtered Leads</div><div class="msnum" id="ms-total">—</div><div class="mssub">Total matching current filters</div></div>
+    <div class="mstat ms-hot"><div class="mslabel">🔥 Hot Leads</div><div class="msnum" id="ms-hot">—</div><div class="mssub">Call immediately</div></div>
+    <div class="mstat ms-warm"><div class="mslabel">⚡ Warm Leads</div><div class="msnum" id="ms-warm">—</div><div class="mssub">Nurture and qualify</div></div>
+    <div class="mstat ms-follow"><div class="mslabel">🔁 Follow-Up</div><div class="msnum" id="ms-follow">—</div><div class="mssub">Schedule callback</div></div>
+  </div>
+  <div class="tbl-wrap">
+    <div class="tbl-nav">
+      <span class="showing-txt">Showing <strong id="showingInfo">—</strong></span>
+      <div class="page-controls">
+        <button class="pgbtn" onclick="pgChange(-1)">← Prev</button>
+        <span class="pginfo" id="pgInfo">—</span>
+        <button class="pgbtn" onclick="pgChange(1)">Next →</button>
+      </div>
+    </div>
+    <div class="tbl-scroll">
+      <table><thead><tr><th>Priority</th><th>Score</th><th>Phone</th><th>Campaign</th><th>Last Response Date</th><th>Response Count</th><th>Latest Student Comment</th><th>All Recent Comments</th><th>Buying Signal</th></tr></thead><tbody id="fullBody"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 3 -->
+<div class="page" id="page-priority">
+  <div class="sec-tag">Counselor Call Desk</div>
+  <div class="sec-title">Priority Call List</div>
+  <div class="sec-sub">Ranked by score · HOT first · Best calling window 1–3 PM IST</div>
+  <div class="banner">
+    <div class="bico">📞</div>
+    <div>
+      <div class="btitle">Counselor SOP — Calling Strategy</div>
+      <div class="bpills">
+        <span class="bpill bp-fire">🔥 HOT: Call within 2 hrs · Mention their query · Have price/offer ready</span>
+        <span class="bpill bp-warm">⚡ WARM: Call within 24h · Qualify → Suggest course → Demo close</span>
+        <span class="bpill" style="background:#F5F0FF;border:1px solid #D4B8FF;color:#8B5CF6">🔁 FOLLOW-UP: Same day · Address complaint first</span>
+        <span class="bpill bp-go">Best window: 1–3 PM IST for maximum connect rate</span>
+      </div>
+    </div>
+  </div>
+  <div class="prio-stats">
+    <div class="kcard kc-hot"><div class="klabel">🔥 Priority 1 — Hot</div><div class="knum">19,992</div><div class="ksub">Direct buy / price signals</div></div>
+    <div class="kcard kc-warm"><div class="klabel">⚡ Priority 2 — Warm</div><div class="knum">13,177</div><div class="ksub">Course queries, suggestions</div></div>
+    <div class="kcard kc-follow"><div class="klabel">🔁 Priority 3 — Follow</div><div class="knum">4,617</div><div class="ksub">Callbacks, complaints</div></div>
+    <div class="kcard kc-no"><div class="klabel">⚠️ Do Not Call</div><div class="knum">8,009</div><div class="ksub">STOP / Not interested</div></div>
+  </div>
+  <div class="chart-row-2" style="margin-bottom:24px">
+    <div class="ccard"><div class="ctitle">Hot Leads by Exam Category</div><div class="csub">Top verticals with direct purchase intent</div><div class="cwrap"><canvas id="hotCatChart"></canvas></div></div>
+    <div class="ccard"><div class="ctitle">Buying Signal Breakdown</div><div class="csub">Key intent keywords from WhatsApp messages</div><div class="cbars" id="sigBars" style="margin-top:6px"></div></div>
+  </div>
+  <div class="tbl-wrap">
+    <div class="tbl-hd"><div class="tbl-title">Top 200 Priority Leads — Ranked Call List</div><button class="btn-dl" onclick="dlPrioCSV()">⬇ Download Top 200</button></div>
+    <div class="tbl-scroll" style="max-height:500px">
+      <table><thead><tr><th>#</th><th>Priority</th><th>Score</th><th>Phone</th><th>Campaign</th><th>Responses</th><th>Latest Signal</th><th>Last Active</th><th>Action</th></tr></thead><tbody id="prioBody"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<script>
+const STATS = {"total": 166884, "hot": 19992, "warm": 13177, "follow": 4617, "ni": 8009, "unclear": 121089, "actionable": 37786};
+const MONTHLY_INTENT=[{M:"2025-06",H:582,W:259,F:88},{M:"2025-07",H:2796,W:1636,F:875},{M:"2025-08",H:5832,W:2872,F:1106},{M:"2025-09",H:6122,W:2238,F:707},{M:"2025-10",H:2414,W:1323,F:560},{M:"2025-11",H:2020,W:1302,F:417},{M:"2025-12",H:3505,W:1874,F:582},{M:"2026-01",H:5915,W:3186,F:1029},{M:"2026-02",H:3727,W:2278,F:704},{M:"2026-03",H:823,W:535,F:130},{M:"2026-04",H:4478,W:2340,F:1126},{M:"2026-05",H:5646,W:2380,F:560}];
+const HOURLY=[4597,9076,14454,17933,24051,29101,35204,36784,31278,26896,30831,37670,43599,53554,51676,49492,32871,20486,10891,5145,2463,1363,1088,1769];
+
+let RAW=[], filtered=[], curPage=1;
+
+// Utils
+const $=id=>document.getElementById(id);
+function fPhone(p){const s=String(p).replace(/\D/g,'');if(s.length===10)return'+91 '+s.slice(0,5)+' '+s.slice(5);if(s.length===12&&s.startsWith('91'))return'+91 '+s.slice(2,7)+' '+s.slice(7);return s;}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function intentFull(i){return{H:'HOT',W:'WARM',F:'FOLLOW_UP',N:'NOT_INTERESTED'}[i]||'UNCLEAR';}
+function plabel(i){return{H:'<div class="prio-label pl-hot">Hot<br>Lead</div>',W:'<div class="prio-label pl-warm">Warm<br>Lead</div>',F:'<div class="prio-label pl-follow">Follow<br>Up</div>'}[i]||'';}
+function ib(i){return{H:'<span class="badge b-hot">🔥 HOT</span>',W:'<span class="badge b-warm">⚡ WARM</span>',F:'<span class="badge b-follow">🔁 FOLLOW-UP</span>',N:'<span class="badge b-no">❌ NOT INT.</span>'}[i]||'';}
+function catTag(c){if(!c||c==='UNKNOWN')return'<span style="color:#C5C8D6;font-size:10px">Unknown</span>';return`<span class="catbadge">${c.replace(/_/g,' ')}</span>`;}
+function scoreColor(s){return s>=70?'#C8101A':s>=40?'#CC7000':'#9EA3B5';}
+function sigPills(sg){if(!sg)return'<span style="color:#C5C8D6;font-size:10px">—</span>';const map={P:['price','rp-P'],Y:['pay','rp-Y'],B:['purchase','rp-B'],D:['discount','rp-D'],C:['batch','rp-C']};return sg.split('').map(ch=>map[ch]?`<span class="rp ${map[ch][1]}">${map[ch][0]}</span>`:'').join('');}
+function getPS(){return parseInt($('fRows').value)||100;}
+
+// Nav
+function sw(id,tab){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('active'));
+  $('page-'+id).classList.add('active');
+  tab.classList.add('active');
+  if(id==='leads')initLeads();
+  if(id==='priority')initPriority();
+}
+$('hdate').textContent=new Date().toLocaleDateString('en-IN',{weekday:'short',year:'numeric',month:'short',day:'numeric'});
+
+// Charts
+Chart.defaults.color='#9EA3B5';
+Chart.defaults.font.family="'Inter',sans-serif";
+Chart.defaults.font.size=11;
+
+new Chart($('monthlyChart').getContext('2d'),{type:'bar',data:{labels:MONTHLY_INTENT.map(m=>m.M),datasets:[{label:'Hot',data:MONTHLY_INTENT.map(m=>m.H),backgroundColor:'rgba(200,16,26,.8)',borderRadius:4,borderSkipped:false},{label:'Warm',data:MONTHLY_INTENT.map(m=>m.W),backgroundColor:'rgba(255,140,0,.8)',borderRadius:4,borderSkipped:false},{label:'Follow-Up',data:MONTHLY_INTENT.map(m=>m.F),backgroundColor:'rgba(139,92,246,.8)',borderRadius:4,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{padding:14,usePointStyle:true}},tooltip:{mode:'index',intersect:false}},scales:{x:{grid:{color:'rgba(0,0,0,.04)'}},y:{grid:{color:'rgba(0,0,0,.04)'}}}}});
+
+new Chart($('intentChart').getContext('2d'),{type:'doughnut',data:{labels:['🔥 Hot','⚡ Warm','🔁 Follow-Up','❌ Not Int.','— Unclear'],datasets:[{data:[STATS.hot,STATS.warm,STATS.follow,STATS.ni,STATS.unclear],backgroundColor:['rgba(200,16,26,.9)','rgba(255,140,0,.9)','rgba(139,92,246,.9)','rgba(203,213,225,.8)','rgba(240,241,247,.9)'],borderColor:['#C8101A','#FF8C00','#8B5CF6','#CBD5E1','#E8E9F0'],borderWidth:2,hoverOffset:10}]},options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{position:'bottom',labels:{padding:10,usePointStyle:true}},tooltip:{callbacks:{label:ctx=>ctx.label+': '+ctx.parsed.toLocaleString()}}}}});
+
+const catD=[['SSC',308],['Banking',240],['Railways',82],['UGC NET',58],['Bihar',49],['CTET',44],['JAIIB/CAIIB',40],['Punjab',34],['Engineering',31],['NEET',30],['W.Bengal',28],['Odisha',25]];
+const mxC=catD[0][1];
+$('catBars').innerHTML=catD.map(([n,v])=>`<div class="cb"><div class="cblabel">${n}</div><div class="cbtrack"><div class="cbfill" style="width:${(v/mxC*100).toFixed(1)}%"></div></div><div class="cbval">${v}</div></div>`).join('');
+
+const mxH=Math.max(...HOURLY);
+$('hmCells').innerHTML=HOURLY.map((c,h)=>{const r=c/mxH;const bg=r>.85?'#C8101A':r>.65?'rgba(200,16,26,.6)':r>.45?'rgba(200,16,26,.35)':r>.25?'rgba(200,16,26,.18)':'#F0F1F7';return`<div class="hmcell" style="background:${bg}" title="${h}:00 — ${c.toLocaleString()}"></div>`;}).join('');
+$('hmLabs').innerHTML=HOURLY.map((_,h)=>`<div class="hmlab">${h}</div>`).join('');
+
+setTimeout(()=>{const el=$('hotCatChart');if(el)new Chart(el.getContext('2d'),{type:'bar',data:{labels:['SSC','Banking','Railways','UGC NET','Bihar','CTET','JAIIB','Punjab','Engg','NEET'],datasets:[{label:'Hot+Warm',data:[308,240,82,58,49,44,40,34,31,30],backgroundColor:'rgba(200,16,26,.8)',borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(0,0,0,.04)'}},y:{grid:{display:false}}}}});},400);
+
+const sigs=[['Price / Fees Query',100],['Purchase Intent',88],['Payment Query',80],['Discount Request',74],['When Classes Start',65],['Course Details',55],['Enrollment Query',48],['Study Material',38]];
+$('sigBars').innerHTML=sigs.map(([n,v])=>`<div class="cb"><div class="cblabel" style="font-size:10px">${n}</div><div class="cbtrack"><div class="cbfill" style="width:${v}%;background:linear-gradient(90deg,#FF8C00,rgba(255,140,0,.3))"></div></div><div class="cbval">${v}%</div></div>`).join('');
+
+// Filter
+function applyF(){
+  const s=$('fSearch').value.toLowerCase().trim();
+  const intent=$('fIntent').value;
+  const cat=$('fCat').value;
+  const sig=$('fSignal').value;
+  const dFrom=$('fDateFrom').value;
+  const dTo=$('fDateTo').value;
+  const minSc=parseInt($('fScore').value)||0;
+  const sort=$('fSort').value;
+  filtered=RAW.filter(l=>{
+    if(intent&&l.i!==intent)return false;
+    if(cat&&l.c!==cat)return false;
+    if(sig&&!(l.sg||'').includes(sig))return false;
+    if(dFrom&&l.ld<dFrom)return false;
+    if(dTo&&l.ld>dTo)return false;
+    if(minSc&&l.s<minSc)return false;
+    if(s){if(!String(l.p).includes(s)&&!(l.lc||'').toLowerCase().includes(s)&&!(l.ac||'').toLowerCase().includes(s))return false;}
+    return true;
+  });
+  filtered.sort((a,b)=>sort==='sd'?b.s-a.s:sort==='sa'?a.s-b.s:sort==='dd'?(b.ld||'').localeCompare(a.ld||''):sort==='da'?(a.ld||'').localeCompare(b.ld||''):sort==='cd'?b.r-a.r:0);
+  curPage=1;renderFull();
+}
+
+function resetF(){$('fSearch').value='';$('fIntent').value='';$('fCat').value='';$('fSignal').value='';$('fDateFrom').value='2025-06-23';$('fDateTo').value='2026-05-30';$('fScore').value='0';$('fSort').value='sd';$('fRows').value='100';filtered=[...RAW];filtered.sort((a,b)=>b.s-a.s);curPage=1;renderFull();}
+
+function renderFull(){
+  const PS=getPS(),st=(curPage-1)*PS,en=Math.min(st+PS,filtered.length);
+  $('ms-total').textContent=filtered.length.toLocaleString();
+  $('ms-hot').textContent=filtered.filter(l=>l.i==='H').length.toLocaleString();
+  $('ms-warm').textContent=filtered.filter(l=>l.i==='W').length.toLocaleString();
+  $('ms-follow').textContent=filtered.filter(l=>l.i==='F').length.toLocaleString();
+  $('showingInfo').textContent=`${(st+1).toLocaleString()}–${en.toLocaleString()} of ${filtered.length.toLocaleString()} leads`;
+  const tp=Math.ceil(filtered.length/PS)||1;
+  $('pgInfo').textContent=`Page ${curPage} / ${tp}`;
+  $('fullBody').innerHTML=filtered.slice(st,en).map(l=>`<tr>
+    <td>${plabel(l.i)}</td>
+    <td><span style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:800;color:${scoreColor(l.s)}">${l.s}</span></td>
+    <td class="td-phone">${fPhone(l.p)}</td>
+    <td>${catTag(l.c)}</td>
+    <td class="td-date">${l.ld||'—'}</td>
+    <td class="td-count">${l.r}</td>
+    <td class="td-msg">${esc((l.lc||'').substring(0,120))}${(l.lc||'').length>120?'…':''}</td>
+    <td class="td-all">${esc((l.ac||'').substring(0,130))}${(l.ac||'').length>130?'…':''}</td>
+    <td>${sigPills(l.sg)}</td>
+  </tr>`).join('');
+}
+
+function initLeads(){filtered=[...RAW];filtered.sort((a,b)=>b.s-a.s);curPage=1;renderFull();}
+function pgChange(d){const PS=getPS(),tp=Math.ceil(filtered.length/PS)||1;curPage=Math.max(1,Math.min(curPage+d,tp));renderFull();}
+
+function initPriority(){$('prioBody').innerHTML=RAW.slice(0,200).map((l,i)=>`<tr>
+  <td style="font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:800;color:${i<3?'#C8101A':'#C5C8D6'};text-align:center">${i+1}</td>
+  <td>${plabel(l.i)}</td>
+  <td><span style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:800;color:${scoreColor(l.s)}">${l.s}</span></td>
+  <td class="td-phone">${fPhone(l.p)}</td>
+  <td>${catTag(l.c)}</td>
+  <td class="td-count">${l.r}</td>
+  <td class="td-msg" style="max-width:220px">${esc((l.lc||'').substring(0,100))}${(l.lc||'').length>100?'…':''}</td>
+  <td class="td-date">${l.ld||'—'}</td>
+  <td>${l.i==='H'?'<span class="ac-chip ac-call">📞 Call Now</span>':l.i==='W'?'<span class="ac-chip ac-qualify">📋 Qualify</span>':'<span class="ac-chip ac-cb">🔁 Callback</span>'}</td>
+</tr>`).join('');}
+
+function toCSV(data){const h=['Phone','Category','Intent','Score','Responses','First_Date','Latest_Date','Buying_Signals','Latest_Comment','All_Comments'];const rows=data.map(l=>[l.p,l.c,intentFull(l.i),l.s,l.r,l.fd,l.ld,l.sg,'"'+(l.lc||'').replace(/"/g,"''").replace(/\n/g,' ')+'"','"'+(l.ac||'').replace(/"/g,"''").replace(/\n/g,' ')+'"'].join(','));return[h.join(','),...rows].join('\n');}
+function dlCSV(){const b=new Blob([toCSV(filtered)],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='adda247_leads_filtered.csv';a.click();}
+function dlPrioCSV(){const b=new Blob([toCSV(RAW.slice(0,200))],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='adda247_priority_top200.csv';a.click();}
+
+// ── LOAD DATA ASYNC ──
+function loadData(){
+  const bar=$('ldBar'), txt=$('ldText');
+  bar.style.width='20%'; txt.textContent='Loading 37,786 leads...';
+  const script=document.createElement('script');
+  script.src='leads_data.js';
+  script.onload=()=>{
+    bar.style.width='80%'; txt.textContent='Parsing lead data...';
+    setTimeout(()=>{
+      bar.style.width='100%'; txt.textContent='Building dashboard...';
+      // RAW is now available from leads_data.js
+      $('prevBody').innerHTML=RAW.filter(l=>l.i==='H').slice(0,25).map((l,i)=>`<tr>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:800;color:${i<3?'#C8101A':'#C5C8D6'};text-align:center">${i+1}</td>
+        <td class="td-phone">${fPhone(l.p)}</td>
+        <td>${catTag(l.c)}</td>
+        <td><span style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:800;color:${scoreColor(l.s)}">${l.s}</span></td>
+        <td class="td-count">${l.r}</td>
+        <td class="td-msg">${esc((l.lc||'').substring(0,100))}${(l.lc||'').length>100?'…':''}</td>
+        <td>${ib(l.i)}</td>
+        <td class="td-date">${l.ld||'—'}</td>
+      </tr>`).join('');
+      setTimeout(()=>{
+        $('loader').classList.add('hide');
+        setTimeout(()=>$('loader').style.display='none',600);
+      },400);
+    },200);
+  };
+  script.onerror=()=>{
+    txt.textContent='Could not load leads_data.js — make sure both files are in same folder';
+    bar.style.background='#FF3B3B';
+  };
+  document.head.appendChild(script);
+}
+window.addEventListener('load', loadData);
+</script>
+</body>
+</html>
